@@ -1,0 +1,18 @@
+<h1>My Movies</h1>
+
+<ul>
+{% for movie in movies %}
+  <li>
+    <strong>{{ movie.title }}</strong> - {{ movie.release_date }}
+    <br>
+    {% if movie.poster %}
+      <img src="{{ movie.poster.url }}" width="150" alt="{{ movie.title }}">
+    {% endif %}
+    <br>
+    <a href="{% url 'movie_update' movie.pk %}">Edit</a>
+    <a href="{% url 'movie_delete' movie.pk %}">Delete</a>
+  </li>
+{% empty %}
+  <li>You have no movies yet. <a href="{% url 'movie_create' %}">Add one now!</a></li>
+{% endfor %}
+</ul>

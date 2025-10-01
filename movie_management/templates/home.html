@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Movie Collection</h1>
+        <p>
+            <a href="{% url 'login' %}">Login</a> |
+            <a href="{% url 'register' %}">Register</a>
+        </p>
+    </div>
+</body>
+</html>
+
+
