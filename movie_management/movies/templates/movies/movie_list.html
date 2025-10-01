@@ -1,18 +1,25 @@
-<h1>My Movies</h1>
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
 
-<ul>
-{% for movie in movies %}
-  <li>
-    <strong>{{ movie.title }}</strong> - {{ movie.release_date }}
-    <br>
-    {% if movie.poster %}
-      <img src="{{ movie.poster.url }}" width="150" alt="{{ movie.title }}">
-    {% endif %}
-    <br>
-    <a href="{% url 'movie_update' movie.pk %}">Edit</a>
-    <a href="{% url 'movie_delete' movie.pk %}">Delete</a>
-  </li>
-{% empty %}
-  <li>You have no movies yet. <a href="{% url 'movie_create' %}">Add one now!</a></li>
-{% endfor %}
-</ul>
+<div class="container">
+    <h2>My Movies</h2>
+
+    <!-- Add Movie button -->
+    <a href="{% url 'movie_create' %}" class="btn btn-success">+ Add Movie</a>
+    <hr>
+
+    {% for movie in movies %}
+    <div class="movie-card">
+        {% if movie.poster %}
+            <img src="{{ movie.poster.url }}" alt="{{ movie.title }}">
+        {% endif %}
+        <h3>{{ movie.title }}</h3>
+        <p><em>{{ movie.release_date }}</em></p>
+        <p>{{ movie.description|truncatewords:20 }}</p>
+        <a href="{% url 'movie_update' movie.pk %}" class="btn btn-primary">Edit</a>
+        <a href="{% url 'movie_delete' movie.pk %}" class="btn btn-danger">Delete</a>
+    </div>
+    {% empty %}
+    <p>No movies yet. Use the button above to add one.</p>
+    {% endfor %}
+</div>

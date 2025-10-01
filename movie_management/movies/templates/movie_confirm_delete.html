@@ -1,0 +1,12 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+<div class="container">
+    <h2>Are you sure you want to delete "{{ object.title }}"?</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'movie_list' %}" class="btn btn-primary">Cancel</a>
+    </form>
+</div>
