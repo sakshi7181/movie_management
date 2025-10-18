@@ -9,5 +9,8 @@ class Movie(models.Model):
     poster = models.ImageField(upload_to='posters/', blank=True, null=True)  # new field
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    class Meta:
+        db_table = 'movies_movie'
+
     def __str__(self):
         return self.title

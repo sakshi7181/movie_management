@@ -26,6 +26,8 @@ SECRET_KEY = "django-insecure-uasrmi6ij+oxhn!p59(8vegv!2)63#r6(akv#u5d$p8&w2nu*2
 DEBUG = True
 
 ALLOWED_HOSTS = []
+# In both projects' settings.py:
+SESSION_COOKIE_DOMAIN = '127.0.0.1'  # Or your domain
 
 
 # Application definition
@@ -76,7 +78,7 @@ WSGI_APPLICATION = "movie_management.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        'NAME': r'C:\Users\saksh\OneDrive\Desktop\movie_api\movie_api\db.sqlite3',  # Exact same path as backend
     }
 }
 
@@ -128,4 +130,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 LOGIN_REDIRECT_URL = '/movies/'   # Redirect after successful login
 
-
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+    'http://127.0.0.1:8001',  # Include the API server domain
+    'http://localhost:8001',
+]

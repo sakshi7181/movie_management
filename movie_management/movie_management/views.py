@@ -1,10 +1,14 @@
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, login as auth_login, logout
 
 def home(request):
     return render(request, 'home.html')
+    
+def logout_view(request):
+    logout(request)
+    return redirect('home')
 
 def login(request):
     if request.method == 'POST':
@@ -28,3 +32,7 @@ def register(request):
         User.objects.create_user(username=username, email=email, password=password)
         return redirect('login')
     return render(request, 'register.html')
+
+
+
+

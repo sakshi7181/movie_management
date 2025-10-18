@@ -1,49 +1,49 @@
-from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Movie
 from .forms import MovieForm
 
-# List all movies for the logged-in user
+# List all movies
 @login_required
 def movie_list(request):
-    movies = Movie.objects.filter(created_by=request.user)
-    return render(request, 'movies/movie_list.html', {'movies': movies})
+    # Show all movies, this view only serves the template - data comes from API
+    # Provide current user info so the frontend can filter movies client-side
+    return render(request, 'movies/movie_list.html', {
+        'current_user_id': request.user.id,
+        'current_username': request.user.username,
+    })
 
 # Create a new movie
 @login_required
 def movie_create(request):
-    if request.method == 'POST':
-        form = MovieForm(request.POST, request.FILES)  # <-- include request.FILES for images
-        if form.is_valid():
-            movie = form.save(commit=False)
-            movie.created_by = request.user
-            movie.save()
-            return redirect('movie_list')
-    else:
-        form = MovieForm()
+    # This view only serves the form template - submission is handled by JS
+    form = MovieForm()
     return render(request, 'movies/movie_form.html', {'form': form})
 
 # Update an existing movie
 @login_required
 def movie_update(request, pk):
-    movie = get_object_or_404(Movie, pk=pk, created_by=request.user)
-    if request.method == 'POST':
-        form = MovieForm(request.POST, request.FILES, instance=movie)
-        if form.is_valid():
-            form.save()
-            return redirect('movie_list')
-    else:
+    # This view only serves the form template with data - submission is handled by JS
+    try:
+        movie = get_object_or_404(Movie, pk=pk)
         form = MovieForm(instance=movie)
+    except Movie.DoesNotExist:
+        # If the movie doesn't exist locally, still show the form for API editing
+        form = MovieForm()
+    
     return render(request, 'movies/movie_form.html', {'form': form})
 
 # Delete a movie
 @login_required
 def movie_delete(request, pk):
-    movie = get_object_or_404(Movie, pk=pk, created_by=request.user)
-    if request.method == 'POST':
-        movie.delete()
-        return redirect('movie_list')
-    return render(request, 'movies/movie_confirm_delete.html', {'movie': movie})
+    # This view only serves the confirmation template - deletion is handled by JS
+    try:
+        movie = get_object_or_404(Movie, pk=pk)
+    except Movie.DoesNotExist:
+        # If the movie doesn't exist locally, use a dummy object for the template
+        from django.contrib.auth.models import AnonymousUser
+        movie = Movie(id=pk, title="Movie", created_by=AnonymousUser())
+    
+    return render(request, 'movies/movie_confirm_delete.html', {'object': movie})
 
 # Create your views here.

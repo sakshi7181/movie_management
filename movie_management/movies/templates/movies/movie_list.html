@@ -1,25 +1,214 @@
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>My Movies</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <script src="{% static 'js/api.js' %}"></script>
+    <style>
+        /* Override the card-like appearance for the movies page */
+        .container {
+            max-width: 90% !important;
+            width: 90% !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            padding: 20px !important;
+        }
+        
+        body {
+            background-color: #f5f5f5 !important;
+        }
+        
+        /* Header styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            position: relative;
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <div class="header-title">Movie Management</div>
+    <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+</div>
 
 <div class="container">
     <h2>My Movies</h2>
 
-    <!-- Add Movie button -->
-    <a href="{% url 'movie_create' %}" class="btn btn-success">+ Add Movie</a>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <!-- Add Movie button -->
+        <a href="{% url 'movie_create' %}" class="btn btn-success">+ Add Movie</a>
+        
+        <!-- Movie filter toggle -->
+        <div>
+            <label for="filter-toggle" style="margin-right: 10px;">Show only my movies:</label>
+            <input type="checkbox" id="filter-toggle" checked>
+        </div>
+    </div>
     <hr>
 
-    {% for movie in movies %}
-    <div class="movie-card">
-        {% if movie.poster %}
-            <img src="{{ movie.poster.url }}" alt="{{ movie.title }}">
-        {% endif %}
-        <h3>{{ movie.title }}</h3>
-        <p><em>{{ movie.release_date }}</em></p>
-        <p>{{ movie.description|truncatewords:20 }}</p>
-        <a href="{% url 'movie_update' movie.pk %}" class="btn btn-primary">Edit</a>
-        <a href="{% url 'movie_delete' movie.pk %}" class="btn btn-danger">Delete</a>
+    <div id="movie-container">
+        <p>Loading movies...</p>
     </div>
-    {% empty %}
-    <p>No movies yet. Use the button above to add one.</p>
-    {% endfor %}
 </div>
+
+<script>
+// Make the current user information available to JavaScript
+window.currentUserId = "{{ current_user_id }}";
+window.currentUsername = "{{ current_username }}";
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const movieContainer = document.getElementById('movie-container');
+    console.log('Current user:', window.currentUsername, 'ID:', window.currentUserId);
+    
+    try {
+        console.log('Fetching movies from API...');
+        const allMovies = await movieApi.list();
+        console.log('All movies received:', allMovies);
+        
+        // Debug the movie structure to see what fields are available
+        console.log("First movie data structure:", allMovies.length > 0 ? JSON.stringify(allMovies[0]) : "No movies");
+        
+        // Add ownership information to each movie
+        allMovies.forEach(movie => {
+            // Check if the current user is the owner based on ID match
+            const currentUserId = parseInt(window.currentUserId);
+            const isOwner = (movie.created_by_id === currentUserId) || 
+                           (movie.owner_id === currentUserId);
+            
+            movie.isCurrentUserOwner = isOwner;
+            console.log(`Movie ${movie.id} - ${movie.title}: User ${window.currentUsername} is owner? ${isOwner}`);
+        });
+        
+        // Filter to show only the current user's movies
+        const userMovies = allMovies.filter(movie => movie.isCurrentUserOwner);
+        console.log('Movies owned by current user:', userMovies);
+        
+        // Get initial filter state from checkbox
+        const filterToggle = document.getElementById('filter-toggle');
+        let showOnlyUserMovies = filterToggle.checked;
+        
+        // Function to render movies with current filter
+        function renderMovies() {
+            const moviesToShow = showOnlyUserMovies ? userMovies : allMovies;
+            renderMovieList(moviesToShow);
+        }
+        
+        // Add event listener for filter toggle
+        filterToggle.addEventListener('change', function() {
+            showOnlyUserMovies = this.checked;
+            renderMovies();
+        });
+        
+        // Initial movie list - filtered by user ownership
+        const movies = showOnlyUserMovies ? userMovies : allMovies;
+        // Function to render the movie list based on provided movies
+        function renderMovieList(moviesToRender) {
+            console.log('Rendering movies:', moviesToRender);
+            
+            if (!moviesToRender || moviesToRender.length === 0) {
+                movieContainer.innerHTML = '<p>No movies found matching your criteria. Use the button above to add one.</p>';
+                return;
+            }
+            
+            let html = '';
+            moviesToRender.forEach(movie => {
+                console.log('Processing movie:', movie);
+                let posterUrl = '';
+                if (movie.poster) {
+                    // Handle both full URL and relative path
+                    posterUrl = movie.poster.startsWith('http') ? movie.poster : `http://127.0.0.1:8001${movie.poster}`;
+                    console.log('Poster URL:', posterUrl);
+                }
+                
+                // Add an ownership indicator
+                const ownershipStyle = movie.isCurrentUserOwner ? 
+                    'border: 2px solid green; background-color: #f0fff0;' : 
+                    'border: 2px solid #ccc; background-color: #f8f9fa;';
+                
+                // Show owner information
+                const ownerInfo = movie.created_by_username ? 
+                    `<p><small>Created by: ${movie.created_by_username}</small></p>` : 
+                    '<p><small>Owner: Unknown</small></p>';
+                
+                // Only show Edit/Delete buttons for movies the user owns
+                const actionButtons = movie.isCurrentUserOwner ? 
+                    `<a href="/movies/${movie.id}/edit/" class="btn btn-primary">Edit</a>
+                     <a href="/movies/${movie.id}/delete/" class="btn btn-danger">Delete</a>` :
+                    `<span class="text-muted">Created by another user</span>`;
+                    
+                html += `
+                    <div class="movie-card" style="${ownershipStyle}">
+                        ${posterUrl ? `<img src="${posterUrl}" alt="${movie.title}">` : ''}
+                        <h3>${movie.title}</h3>
+                        <p><em>${movie.release_date}</em></p>
+                        <p>${movie.description ? movie.description.substring(0, 100) + '...' : ''}</p>
+                        ${ownerInfo}
+                        ${actionButtons}
+                    </div>
+                `;
+            });
+            
+            movieContainer.innerHTML = html;
+        }
+        
+        // Initial render
+        renderMovies();
+    } catch (error) {
+        console.error('Error loading movies:', error);
+        let errorDetails = '';
+        if (error.message) {
+            try {
+                // Try to parse as JSON if it's a structured error
+                const jsonError = JSON.parse(error.message);
+                errorDetails = `<br><pre>${JSON.stringify(jsonError, null, 2)}</pre>`;
+            } catch(e) {
+                // Just use the message as is
+                errorDetails = `<br><pre>${error.message}</pre>`;
+            }
+        }
+        
+        movieContainer.innerHTML = `
+            <p class="error">Error loading movies. Please try again later.</p>
+            <div id="debug-info">
+                <p>Debug information:</p>
+                ${errorDetails}
+                <p>Please check:</p>
+                <ul>
+                    <li>Is your API server running at http://127.0.0.1:8001?</li>
+                    <li>Are you logged in with valid credentials?</li>
+                    <li>Open browser console (F12) for more detailed errors</li>
+                </ul>
+            </div>
+        `;
+    }
+});
+</script>
+</body>
+</html>

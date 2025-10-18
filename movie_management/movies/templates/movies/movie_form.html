@@ -1,13 +1,72 @@
+
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{{ form.instance.pk|yesno:"Edit Movie,Add Movie" }}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="{% static 'js/api.js' %}"></script>
+</head>
+<body>
 
 <div class="container">
     <h2>{{ form.instance.pk|yesno:"Edit Movie,Add Movie" }}</h2>
 
-    <form method="post" enctype="multipart/form-data">
+    <form id="movie-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-success">Save</button>
         <a href="{% url 'movie_list' %}" class="btn btn-primary">Back</a>
+        <div id="error-message" style="color: red; margin-top: 10px; display: none;"></div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('movie-form');
+    const errorMessage = document.getElementById('error-message');
+    const movieId = '{{ form.instance.pk|default:"" }}';
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        errorMessage.style.display = 'none';
+        
+        try {
+            // Create FormData from the form - this will include the file
+            const formData = new FormData(form);
+            
+            // Log FormData contents (for debugging)
+            console.log('Form data being sent:');
+            for (let [key, value] of formData.entries()) {
+                if (key === 'poster' && value instanceof File) {
+                    console.log('Poster file:', value.name, value.size, 'bytes');
+                } else {
+                    console.log(key + ':', value);
+                }
+            }
+            
+            let response;
+            if (movieId) {
+                // Update existing movie
+                response = await movieApi.update(movieId, formData);
+            } else {
+                // Create new movie
+                response = await movieApi.create(formData);
+            }
+            
+            console.log('API response:', response);
+            window.location.href = '{% url "movie_list" %}';
+            
+        } catch (error) {
+            console.error('Error saving movie:', error);
+            errorMessage.textContent = 'Error saving movie: ' + (error.message || 'Unknown error');
+            errorMessage.style.display = 'block';
+        }
+    });
+});
+</script>
+</body>
+</html>
+
