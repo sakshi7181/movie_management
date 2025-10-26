@@ -1,0 +1,71 @@
+# Movie Management System
+
+This is a Django-based movie management system with a separate API backend. The frontend uses token-based authentication to communicate with the backend API.
+
+## Project Structure
+
+- `movie_management/` - Django frontend application
+- API (separate project running at http://127.0.0.1:8001/api)
+
+## Setup
+
+### Backend API Setup
+
+1. The backend API should be running at http://127.0.0.1:8001/api
+2. Make sure the API supports token-based authentication
+3. The API should have the following endpoints:
+   - `/api/token/` - For obtaining authentication token
+   - `/api/movies/` - For movie CRUD operations
+   - `/api/register/` - For user registration
+
+### Frontend Setup
+
+1. Clone this repository
+2. Navigate to the project folder
+3. Install dependencies:
+   ```
+   pip install django django-cors-headers
+   ```
+4. Run the development server:
+   ```
+   python manage.py runserver
+   ```
+5. Access the application at http://127.0.0.1:8000
+
+## Features
+
+- User registration and login with token-based authentication
+- Create, read, update, and delete movies
+- Upload movie poster images
+- All users can see all movies regardless of creator
+
+## How the Authentication Works
+
+1. Users register via the register form
+2. When users log in, the system makes a POST request to `/api/token/` endpoint
+3. The received token is stored in localStorage
+4. All subsequent API requests include the token in the Authorization header
+5. When logging out, the token is removed from localStorage
+
+## Technical Details
+
+- Frontend: Django 5.2.6 with JavaScript fetch API
+- Authentication: Token-based (stored in localStorage)
+- File Uploads: Using FormData API
+- API Communication: REST API with JSON
+- CORS: Enabled for cross-domain requests
+
+## Troubleshooting
+
+If you encounter "Failed to fetch" errors:
+1. Make sure the backend API is running at http://127.0.0.1:8001
+2. Check browser console for detailed error messages
+3. Verify that your API supports token authentication
+4. Check CORS settings to ensure cross-origin requests are allowed
+
+## API JavaScript Client
+
+The system includes a JavaScript API client (`api.js`) that handles:
+- Authentication (token storage and retrieval)
+- API requests with proper headers
+- Error handling and debugging
