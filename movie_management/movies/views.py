@@ -14,7 +14,6 @@ def movie_list(request):
     })
 
 # Create a new movie
-@login_required
 def movie_create(request):
     # This view only serves the form template - submission is handled by JS
     form = MovieForm()

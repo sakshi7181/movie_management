@@ -7,7 +7,19 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'style.css' %}">
-    <script src="{% static 'js/api.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="{% static 'js/api.js' %}?v=3"></script>
+    <!-- Debug: immediate runtime checks to help identify cached/ordering issues -->
+    <script>
+        console.log('debug: typeof axios =', typeof axios);
+        console.log('debug: typeof window.movieApi =', typeof window.movieApi);
+        try {
+            console.log('debug: getCsrfToken exists =', typeof getCsrfToken === 'function');
+            console.log('debug: getCsrfToken() length =', (typeof getCsrfToken === 'function') ? (getCsrfToken() ? getCsrfToken().length : 0) : 'n/a');
+        } catch (e) {
+            console.error('debug: error calling getCsrfToken()', e);
+        }
+    </script>
     <style>
         /* Override the card-like appearance for the movies page */
         .container {

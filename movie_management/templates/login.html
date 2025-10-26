@@ -17,6 +17,57 @@
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
+        <script>
+            // Obtain an API token from the API server before allowing the normal login form submit.
+            // We prevent the default submit, request the token, store it, then submit the form so
+            // both a frontend session and an API token are available.
+            (function(){
+                const form = document.querySelector('form');
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    (async () => {
+                        try {
+                            const username = form.querySelector('input[name="username"]').value;
+                            const password = form.querySelector('input[name="password"]').value;
+
+                            // POST to the API JWT create endpoint (djangorestframework-simplejwt)
+                            // This returns { access: '...', refresh: '...' }
+                            const resp = await fetch('http://127.0.0.1:8001/api/jwt/create/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({ username, password }),
+                            });
+
+                            if (resp.ok) {
+                                const data = await resp.json();
+                                // If JWT endpoint returned tokens, store the access/refresh tokens
+                                if (data && data.access) {
+                                    try { localStorage.setItem('apiJwtAccess', data.access); } catch (err) { console.debug('Could not store apiJwtAccess', err); }
+                                    if (data.refresh) {
+                                        try { localStorage.setItem('apiJwtRefresh', data.refresh); } catch (err) { console.debug('Could not store apiJwtRefresh', err); }
+                                    }
+                                    console.debug('Obtained JWT tokens and stored in localStorage');
+                                } else if (data && data.token) {
+                                    // Fallback to DRF token endpoint shape
+                                    try { localStorage.setItem('apiToken', data.token); } catch (err) { console.debug('Could not store apiToken', err); }
+                                    console.debug('Obtained DRF token and stored in localStorage');
+                                }
+                            } else {
+                                console.debug('Token request failed', resp.status);
+                            }
+                        } catch (err) {
+                            console.debug('Error obtaining API token', err);
+                        } finally {
+                            // Submit the original form to create the frontend session and continue navigation
+                            form.submit();
+                        }
+                    })();
+                });
+            })();
+        </script>
         <p><a href="{% url 'home' %}">Back to Home</a></p>
     </div>
 </body>

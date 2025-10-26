@@ -137,3 +137,10 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8001',  # Include the API server domain
     'http://localhost:8001',
 ]
+
+# When sharing DB-backed sessions between two Django projects make sure
+# both projects use the same session serializer. The API project must also
+# be updated to use JSONSerializer (or both set to PickleSerializer) so
+# Session.get_decoded() can read the stored session data.
+# Recommended for development:
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
